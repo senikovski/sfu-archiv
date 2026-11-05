@@ -21,17 +21,60 @@ site/      ← the finished website. Upload the contents of this folder.
 source/    ← everything the site is built from
   content.json      pages, articles, footer, media index, design settings
                     (exported from the WordPress database)
-  data/*.csv        Personen / Orte databases (homepage archive + map)
+  sanity.json       which Sanity project holds the Personen/Orte database
+  data/*.csv        the original Personen / Orte tables (now only a fallback, see below)
   media/            original images & video (only the ones the site uses)
-  fonts/            webfonts as WOFF2
+  fonts/            webfonts as WOFF2 (not in Git – licensed; see "Fonts")
+  fonts.enc         the same fonts, encrypted, for the GitHub build
   theme/            CSS: base.css (layout grid), legacy-theme.css (the original
                     custom CSS by ostblok), overrides.css (additions)
   js/               site.js (menu, back-to-top), archiv.js (Personen/Orte)
   vendor/leaflet/   Leaflet 1.9.4 (map library, self-hosted)
+studio/    ← Sanity Studio (the editing interface), deployed to sfu-archiv.sanity.studio
 tools/
-  build.py                   source/ → site/
+  build.py                   source/ (+ Sanity) → site/
+  sanity_state.py            fingerprint of the Sanity content (used to skip unneeded builds)
+  fonts.py                   encrypt/decrypt the font files
+  import_to_sanity.py        one-time import of the CSV tables into Sanity
   export_from_wordpress.py   one-time export from the old WordPress backup
+.github/workflows/build.yml  builds + publishes the site automatically
 ```
+
+## Editing the archive (Personen, Orte)
+
+People and places are edited in **Sanity Studio: https://sfu-archiv.sanity.studio**
+(log in with the Google account that owns the Sanity project; more editors can be
+invited under sanity.io/manage → project "SFU" → Members).
+
+- **Personen**: name, Lebensdaten, Kurztext, Porträt (optional thumbnail), linked
+  Artikel / Personen / Orte, and places without a map entry ("Weitere Orte").
+- **Orte**: name, address, text, image, coordinates (decimal degrees, e.g. from
+  Google Maps → right-click a place), linked Artikel / Personen.
+- **Artikel**: title + author, and which article page of the website it links to.
+  The article *pages* themselves are not in Sanity (they're in `content.json`).
+- "Reihenfolge" sets the position in the name list / the number on the map.
+
+After you click **Publish**, the website updates by itself: GitHub checks Sanity every
+10 minutes and rebuilds when something changed (a build takes ~1–2 minutes). To
+publish immediately: GitHub → repository → Actions → "Build & deploy" → Run workflow.
+
+The homepage counters "32 Personen" / "12 Orte" follow the number of entries.
+
+Test version: **https://senikovski.github.io/sfu-archiv/** (GitHub Pages).
+Repository: https://github.com/senikovski/sfu-archiv
+
+### Moving to the SFU server later
+
+Only the last step of `.github/workflows/build.yml` changes: instead of deploying to
+GitHub Pages, upload `site/` to the SFU web folder via SFTP (e.g. with an rsync/SFTP
+action and the server credentials stored as GitHub secrets). Nothing else changes.
+
+### Fonts
+
+The webfonts (Editorial New, PP Pangram Sans, Lexik) are commercially licensed, so the
+public repository only contains them encrypted (`source/fonts.enc`). The key is the
+GitHub secret `FONTS_KEY` and the local file `.fonts-key` (keep a copy somewhere safe).
+After changing fonts: `python3 tools/fonts.py encrypt`.
 
 ## Preview locally
 
@@ -47,8 +90,9 @@ like `artikel/…/` need a web server.)
 ## Rebuild after changing something
 
 ```sh
-pip install pillow          # once
-python3 tools/build.py
+pip install pillow certifi  # once
+python3 tools/build.py          # reads Personen/Orte from Sanity
+python3 tools/build.py --csv    # …or from source/data/*.csv (offline)
 ```
 
 The build renders every page from `source/content.json`, converts images to
@@ -56,12 +100,8 @@ WebP (cached, so rebuilds take a few seconds), and writes `site/`.
 
 Typical edits:
 
-- **Personen / Orte**: edit `source/data/personen.csv` / `orte.csv`
-  (semicolon-separated, same columns as before). Portraits are matched by
-  file name like before: `source/media/2021/11/NN_Vorname_Nachname.png` and
-  `Thumbnail_NN_Vorname_Nachname.png`. NN is the row number starting at 00.
-  Note that the "Long" column holds the latitude and "Lat" the longitude, as in
-  the original file.
+- **Personen / Orte**: in Sanity Studio (see above). The CSV files are kept only as
+  an offline fallback and are no longer updated.
 - **Texts of articles/pages**: they're in `source/content.json` as HTML inside
   each module (`"module": "text"` → `content.xl`). For small fixes you can also
   edit `site/…/index.html` directly, but a rebuild will overwrite that.

@@ -1217,12 +1217,26 @@ def build_assets():
         shutil.copy2(SRC / 'fonts' / f, fonts / f)
 
 
+def write_studio_page_list():
+    """The Studio's "Seite auf der Website" dropdown lists the article pages that exist here."""
+    items = sorted(({'title': page_title(p).replace(' – ' + SITE['tagline'], ''), 'value': p['slug']}
+                    for p in PAGES.values() if p['type'] == 'project' and p['slug'] not in ('impressum', 'datenschutz')),
+                   key=lambda x: x['value'])
+    ts = ('// Article pages that exist on the website (generated from source/content.json by tools/build.py).\n'
+          '// An "Artikel" entry in the Studio links to one of these pages.\n'
+          f'export const artikelSeiten = {json.dumps(items, ensure_ascii=False, indent=2)}\n')
+    target = ROOT / 'studio' / 'schemaTypes' / 'artikelSeiten.ts'
+    if target.parent.exists() and (not target.exists() or target.read_text(encoding='utf-8') != ts):
+        target.write_text(ts, encoding='utf-8')
+
+
 def main():
     for d in ('assets',):
         shutil.rmtree(OUT / d, ignore_errors=True)
     for html_file in OUT.glob('**/index.html'):
         html_file.unlink()
     OUT.mkdir(exist_ok=True)
+    write_studio_page_list()
     build_assets()
     built = []
     for pid in PAGES:
