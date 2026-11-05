@@ -63,6 +63,18 @@ The homepage counters "32 Personen" / "12 Orte" follow the number of entries.
 Test version: **https://senikovski.github.io/sfu-archiv/** (GitHub Pages).
 Repository: https://github.com/senikovski/sfu-archiv
 
+### Changing the Studio (fields, labels)
+
+The schema is in `studio/schemaTypes/`. To try changes locally and publish them:
+
+```sh
+cd studio && npm install && npm run dev     # http://localhost:3333
+npx sanity deploy                           # updates sfu-archiv.sanity.studio
+```
+
+(npm doesn't work on exFAT drives like the "Flightcase" disk – copy `studio/` to the
+internal disk first.)
+
 ### Moving to the SFU server later
 
 Only the last step of `.github/workflows/build.yml` changes: instead of deploying to
