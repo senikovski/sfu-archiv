@@ -75,6 +75,7 @@ class Page:
         self.css = []
         self.motion_css = []
         self.motion_css_enabled = False
+        self.article_end = None  # section id before which the end-of-article bar goes
         self.counter = 0
 
     def url(self, site_path):
@@ -602,6 +603,8 @@ def render_sections(ram, page, is_footer=False):
             continue
         if section_id == 'cover' and (is_footer or not cover_visible):
             continue
+        if not is_footer and section_id == page.article_end:
+            html_out += ARTICLE_END
         s = ram[section_id]
         styles = s.get('styles', {}).get('xl', {})
         layout = dict(s.get('layout', {}))
@@ -639,7 +642,12 @@ def render_sections(ram, page, is_footer=False):
         if section_id == 'cover':
             html_out += '<div id="content-start"></div>'
         first = False
+    if not is_footer and page.article_end == '__end__':
+        html_out += ARTICLE_END
     return html_out
+
+
+ARTICLE_END = '<div class="article-end" aria-hidden="true"></div>'
 
 
 # =====================================================================
@@ -1085,11 +1093,12 @@ def tint_further_reading(ram, page_color):
         if ram[sid].get('styles', {}).get('xl', {}).get('background-color', '').lower() != '#222222':
             break
         tail.append(sid)
+    first_tail = tail[-1] if tail else None
     if not any('article-cards-overlay' in json.dumps(ram['order'][sid]) or any(
             'article-cards-overlay' in (ram.get(col, {}).get('classes') or '')
             for row in ({'r': ram['order'][sid]} if 'columns' in ram['order'][sid] else ram['order'][sid]).values()
             for col in row['columns']) for sid in tail):
-        return
+        return None
     shade = darker(page_color)
     for sid in tail:
         for st in ram[sid].get('styles', {}).values():
@@ -1110,6 +1119,7 @@ def tint_further_reading(ram, page_color):
                             st['background-color'] = 'transparent'
                     if m.get('module') == 'text':
                         m['content']['xl'] = re.sub(r'color: (rgb\(240, 232, 221\)|#f0e8dd)', 'color: #222222', m['content']['xl'])
+    return first_tail
 
 
 def render_page(pid):
@@ -1125,7 +1135,9 @@ def render_page(pid):
     page.motion_css_enabled = ram.get('branding', {}).get('scroll_reveal') == 'disabled'
     prepare_captions(ram)
     if p['type'] == 'project' and ram.get('branding', {}).get('background-color'):
-        tint_further_reading(ram, ram['branding']['background-color'])
+        page.article_end = tint_further_reading(ram, ram['branding']['background-color'])
+    if p['type'] == 'project' and p['slug'] not in ('impressum', 'datenschutz'):
+        page.article_end = page.article_end or '__end__'
 
     body = render_sections(ram, page)
     footer_id = p['settings'].get('meta', {}).get('footer') or DESIGN['advanced'].get('global_footer')

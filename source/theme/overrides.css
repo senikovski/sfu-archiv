@@ -81,3 +81,16 @@
    above and below it. Its section has z-index 23, so Safari painted the glow over the
    cards. Card sections get their own layer above it. */
 #content-holder .content-block.article-cards{z-index:30}
+
+/* "Veröffentlichte Projektbeiträge" (About): a proper reference list –
+   one entry per item, hanging indent, titles in italics, DOI links */
+#content-holder .citations{list-style:none;margin:0;padding:0}
+#content-holder .citations li{font-family:"Lexik-Regular-webfont",serif;font-size:.77778rem;line-height:1.45;padding-left:1.5em;text-indent:-1.5em;margin:0 0 .9em}
+#content-holder .citations li:last-child{margin-bottom:0}
+#content-holder .citations i{font-family:"Lexik-Italic-webfont",serif;font-style:normal}
+#content-holder .citations a.doi{color:inherit;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px;overflow-wrap:anywhere}
+#content-holder .citations a.doi:hover{text-decoration-thickness:2px}
+#content-holder .citations .doi-note{opacity:.7}
+
+/* end-of-article mark */
+.article-end{width:3.33333rem;height:4px;background:#222;margin:3.33333rem auto 4.44444rem}
