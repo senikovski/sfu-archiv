@@ -1,0 +1,72 @@
+name: Build & deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:            # "Run workflow" button on GitHub
+  repository_dispatch:          # optional: Sanity webhook → instant rebuild
+    types: [sanity-publish]
+  schedule:
+    - cron: '*/10 * * * *'      # check Sanity for new/changed entries every 10 minutes
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Anything new in Sanity?
+        id: check
+        run: |
+          python3 tools/sanity_state.py > state.txt
+          echo "Sanity: $(cat state.txt)"
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            live=$(curl -fsSL "${{ vars.SITE_URL }}build-info.txt" || echo none)
+            echo "Live site: $live"
+            if [ "$live" = "$(cat state.txt)" ]; then echo "skip=true" >> "$GITHUB_OUTPUT"; fi
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.check.outputs.skip != 'true'
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: tools/requirements.txt
+
+      - name: Build
+        if: steps.check.outputs.skip != 'true'
+        env:
+          FONTS_KEY: ${{ secrets.FONTS_KEY }}
+        run: |
+          pip install -r tools/requirements.txt
+          python3 tools/fonts.py decrypt
+          python3 tools/build.py
+          cp state.txt site/build-info.txt
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.check.outputs.skip != 'true'
+        with:
+          path: site
+
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,1151 @@
+/* Custom CSS of the original Semplice theme (wp-content/themes/semplice5/style.css), by ostblok. Kept as-is so the design matches. */
+/* hallo johannes */
+
+/*gradient blau:
+
+#7da1fd
+
+gradient lavendel:
+#c6aafd
+
+glyphencode nr 1 in bold outline
+&#9312
+
+glyphencode in bold fillin
+1 - 10
+&#10102
+
+['&#10102', '&#10103', "&#10104", "&#10105", "&#10106", '&#10107', '&#10108', "&#10109", "&#10110", "&#10111"]
+11 - 20
+&#9451
+
+*/
+
+@font-face{
+  font-family: editorialR;
+  src:  url("fonts/EditorialNew-Regular.otf");
+}
+@font-face{
+  font-family: panB;
+  src:  url("fonts/PPPangramSans-Bold.otf");
+}
+@font-face{
+  font-family: panSB;
+  src:  url("fonts/PPPangramSans-Semibold.otf");
+}
+
+:root {
+  --editorial:  ;
+}
+
+.leaflet-bottom{
+	display: none;
+}
+
+/* This is what makes our section fixed */
+.fixed-section {
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  pointer-events: none !important;
+}
+
+/* This makes our fixed elements clickable */
+.fixed-section .column-content {
+  pointer-events: auto !important;
+}
+
+/* titel box auf der startseite */
+.titleBoxBorder{
+  border-style: solid;
+  border-width: 2px;
+  border-color: rgb(240, 232, 221);
+}
+.titleBoxBorderMitte{
+  	border-width: 2px;
+  	border-right: 2px solid rgb(240, 232, 221);
+  	border-left: 2px solid rgb(240, 232, 221);
+	border-top: none !important;
+  	border-bottom: none !important;
+}
+
+/* border ueber das archiv */
+#content_8r4eyet9m{
+  padding-top: 2.7777777777777777rem
+}
+/* border gerhard */ 
+/* .gerhardL{
+  border-bottom: 2px solid;
+  border-style: solid;
+  border-left: 2px solid rgb(34, 34, 34);
+  /* gerhard bild 
+  background-image: url("http://ve842nap.at.edis.global/wp-content/uploads/2022/01/gerhard_platzhalter.jpg");
+  background-position: center;
+  background-size: 105%;
+  background-repeat: no-repeat;
+  opacity: 0.7;
+} */
+.gerhardM{
+	border-bottom: 2px solid rgb(34, 34, 34) !important;
+    border-style: solid;
+     border-right: 2px solid rgb(34, 34, 34) !important;
+}
+.gerhardR{
+	border-bottom: 2px solid;
+    border-style: solid;
+}
+#autoren{
+  position: absolute;
+  width: 215px;
+  right: 28px;
+  border: 2px solid;
+  top: 29px;
+  padding: 0px;
+  font-weight: 900;
+}
+#autoren h3{
+  font-family: "panB", sans-serif !important;
+  /*font-weight: 400;*/
+  font-style: normal;
+  font-size: 12px !important;
+  text-transform: uppercase;
+  border-bottom: 2px solid rgb(34, 34, 34);
+  padding: 0 14px;
+}
+#autoren p {
+  font-family: "panB", sans-serif !important;
+  font-size: 12px !important;
+  padding: 10px 14px;
+}
+#autoren p span{
+	text-decoration: underline;
+}
+.logoSponsoren{
+	width: 100px !important;
+  	height: auto;
+  	display: inline-block;
+}
+#logoWrap{
+  position: absolute;
+  display: flex;
+  bottom: 0;
+  width: 100%;
+  justify-content: space-between;
+  padding: 0 20px 7px 50px;
+  align-items: center;
+
+}
+
+#logo0{
+  width: 146px;
+}
+#logo1{
+  width: 146px ;
+}
+#logo2{
+  width: 100px ;
+
+}
+
+#gradientGerhard{
+	width: 120%;
+  	height: 400px;
+  background-color: red;
+  z-index: -4;
+}
+
+
+
+
+.autorBox{
+	border-right: 2px solid rgb(34, 34, 34);
+  	border-left: 2px solid rgb(34, 34, 34);
+	border-top: 2px solid rgb(34, 34, 34);
+}
+.mittelBox{
+	border-left: 2px solid rgb(34, 34, 34);
+	border-right: 2px solid rgb(34, 34, 34);
+ 	border-top: none !important;
+  	border-bottom: none !important;
+}
+.bodenBox{
+	border-left: 2px solid rgb(34, 34, 34);
+	border-right: 2px solid rgb(34, 34, 34);
+ 	border-top: none !important;
+  	border-bottom: 2px solid rgb(34, 34, 34);
+}
+
+/* Signatur Box */
+
+.BoxSignatur{
+  	border-width: 2px;
+  	border-right: 2px solid rgb(240, 232, 221);
+  	border-left: 2px solid rgb(240, 232, 221);
+	border-top: none !important;
+  	border-bottom: 2px solid rgb(240, 232, 221);
+}
+
+/* Weiterlesen Box */
+
+.autorBoxW{
+	border-right: 2px solid rgba(240, 232, 221,1);
+  	border-left: 2px solid rgba(240, 232, 221,1);
+	border-top: 2px solid rgba(240, 232, 221,1);
+}
+.mittelBoxW{
+	border-left: 2px solid rgba(240, 232, 221,1);
+	border-right: 2px solid rgba(240, 232, 221,1);
+ 	border-top: none !important;
+  	border-bottom: none !important;
+}
+.bodenBoxW{
+	border-left: 2px solid rgba(240, 232, 221,1);
+	border-right: 2px solid rgba(240, 232, 221,1);
+ 	border-top: none !important;
+  	border-bottom: 2px solid rgba(240, 232, 221,1);
+}
+
+.autorBoxB{
+	border-right: 2px solid rgb(34, 34, 34);
+  	border-left: 2px solid rgb(34, 34, 34);
+	border-top: 2px solid rgb(34, 34, 34);
+}
+.mittelBoxB{
+	border-left: 2px solid rgb(34, 34, 34);
+	border-right: 2px solid rgb(34, 34, 34);
+ 	border-top: none !important;
+  	border-bottom: none !important;
+}
+
+.mittelBoxBildB{
+	border-left: 2px solid rgb(34, 34, 34);
+	border-right: 2px solid rgb(34, 34, 34);
+ 	border-top: 2px solid rgb(34, 34, 34);
+  	border-bottom: 2px solid rgb(34, 34, 34);
+}
+
+.bodenBoxB{
+	border-left: 2px solid rgb(34, 34, 34);
+	border-right: 2px solid rgb(34, 34, 34);
+ 	border-top: none !important;
+  	border-bottom: 2px solid rgb(34, 34, 34);
+}
+
+/* Bibliographie */
+.bibBox{
+	border-left: 2px solid rgb(34, 34, 34);
+	border-right: 2px solid rgb(34, 34, 34);
+ 	border-top: none !important;
+  	border-bottom: 2px solid rgb(34, 34, 34);
+}
+
+ /*ARTIKEL*/
+ .dreierBG{
+    border-radius: 79px;
+    opacity: 0.4;
+ }
+#dreierWrap {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 79px;
+  display: flex;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+#dreierWrap img{
+  opacity: 0.4;
+}
+.imgWrap3er{
+  width: 32%;
+}
+.autorArtikelCard{
+  position: absolute;
+  top: 0px;
+}
+/* erster schatten */
+.gradientShadowOrange{
+	width: 500px;
+	height: 500px;
+	background: rgb(254,155,6);
+	background: radial-gradient(circle, rgba(254,155,6,1) 0%, rgba(0,212,255,0) 70%);
+	margin-top: -350px;
+	z-index: -3;
+	opacity: 0.4;
+	position: absolute;
+	margin-left: -200px;
+}
+/*#row_s10qbvtcu{
+  border-style: solid;
+  border-width: 2px;
+  border-radius: 4.444444444444445rem ;
+}*/
+#row_6254268f8{
+  z-index: 5;
+}
+#gradientSmoke{
+  top: -500px;
+  z-index: -2;
+  width: 100%;
+  height: 600px;
+  position: absolute;
+}
+#orange{
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+  position: absolute;
+  top: 0;
+
+ background: rgb(254,155,6);
+background: radial-gradient(circle, rgba(254,155,6,0) 10%, rgba(254,155,6,1) 50%, rgba(218,218,218,0) 90%, rgba(227,203,168,1) 220%); 
+}
+#bgTop{
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+  position: absolute;
+  bottom: 0;
+  background: rgb(240,232,222);
+  background: linear-gradient(180deg, rgba(240,232,222,1) 0%, rgba(218,218,218,0) 99%); 
+}
+#bgBtm{
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+  position: absolute;
+  bottom: 0;
+  background: rgb(240,232,222);
+  background: linear-gradient(0deg, rgba(240,232,222,1) 0%, rgba(218,218,218,0) 99%); 
+}
+#bgBtmKartei{
+  width: 100%;
+  height: 20%;
+  z-index: -2;
+  position: absolute;
+  bottom: 0;
+  background: rgb(240,232,222);
+  background: linear-gradient(0deg, rgba(240,232,222,1) 0%, rgba(218,218,218,0) 99%); 
+}
+.unbreakable{
+  white-space: nowrap;
+}
+#column_htcfl7f1u{
+  border-bottom: 2px solid;
+  border-left: solid;
+  border-top: solid;
+  border-right: none;
+  border-radius: 79px 0 0 79px;
+}
+.smokingGunBorderM{
+  border-bottom: 2px solid;
+  border-left: none;
+  border-top: solid;
+  border-right: none;
+  border-radius: 79px 0 0 79px;
+}
+#column_kvyfptmai{
+  border-bottom: 2px solid !important;
+  border-top: 2px solid !important;
+
+}
+#column_4z70j85uu{
+  border-bottom: 2px solid !important;
+  border-left: none;
+  border-top: 2px solid !important;
+  border-right: 2px solid !important;
+  border-radius: 0 79px 79px 0 !important;
+}
+#column_htcfl7f1u{
+  border-left: 2px solid !important;
+  border-top: 2px solid !important;
+  border-bottom: 2px solid !important;
+  border-right: none !important;
+  border-radius: 79px 0 0 79px !important;
+}
+.smokingGunBorderR{
+  border-radius: 79px !important;
+}
+#row_s10qbvtcu{
+  z-index: 10 !important; 
+}
+#smokingGunBG{
+  background-image: url('https://psychologie-im-nationalsozialismus.sfu.ac.at/wp-content/uploads/2021/08/unvorstellbare-grausamkeit-die.jpg');
+  background-size: cover;
+  background-position:  center;
+  opacity: 0.8;
+  width: 100%;
+  height: 422px;
+  border-radius: 79px !important;
+}
+#column_r2qt312k9{
+  padding-right: 0;
+  border-right: 2px solid !important;
+  border-top: 2px solid !important;
+  border-bottom: 2px solid !important;
+  /*border-right: none !important;*/
+  border-radius: 0 79px 79px 0 !important;
+}
+.stats div h2{
+  border-radius: 6.666666666666667rem;
+  border-width: 1px;
+  padding: 13px 22px 6px 0px;
+  border-style: solid;
+}
+
+/* PERSONEN LISTE */
+
+
+/*////// PERSONEN*/
+  *{
+    box-sizing: border-box;
+  }
+  #pListWrap{
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+  }
+  #pGrad{
+    width: 100%;
+    height: 60px;
+    bottom: 25px;
+    position: absolute;
+    background-image: linear-gradient(to bottom, rgba(240,232,221,0), rgba(240,232,221,1));
+  }
+  #personenListe{
+    display: flex;
+    flex-wrap: wrap;
+    padding-top: 15px;
+    height: 300px;
+    overflow: hidden;
+  }
+  #dropdownP{
+    font-family: "PPPangramSans-Bold", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 12pt;
+  }
+  .listenElement {
+    display: flex;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    margin-bottom: 10px;
+  }
+  .listenElement h2{
+    margin-bottom: 0 !important;
+    font-size: 30px !important;
+    }
+  .listenElement h2:hover{
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+  }
+  .listenElement h3 {
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    align-self: flex-start;
+    /*letter-spacing: 0.9px;*/
+    margin-top: -5px;
+  }
+  .thumbnail{
+    width: 60px;
+    height: 35px;
+    border-radius: 15px;
+    background-position: center;
+    transition: all 0.25s ease;
+  }
+
+  .thumbnail:hover{
+    border-radius: 0px;
+  }
+  .listenElement > * {
+    margin: 0;
+    margin-right: 7px;
+  }
+  #spacer{
+    width: 100%;
+    height: 40px  ;
+  }
+  #personenKarte{
+    margin-top: 25px;
+    border-style: solid !important;
+    display: flex;
+    border-radius: 50px;
+    border-width: 2px;
+    z-index: 4;
+    position: relative;
+    overflow: hidden;
+  }
+  #portrait{
+    width: 33.33%;
+    min-height: 554px;
+    flex-shrink: 0;
+    border-radius: 50px;
+    opacity: 0.75;
+    z-index: 2;
+    background-size: cover;
+    background-position: center center;
+  }
+  #personeninfo{
+    width:  66.66%;
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+  }
+  #nameW{
+    padding-left: 15px;
+    margin-bottom: 0 !important;
+    font-size: 48px !important;
+  }
+  #nameJahr{
+    display: flex;
+    width: 100%;
+    margin-top: 25px;
+    margin-bottom: 0.67rem
+  }
+  #jahr{
+    font-size: 20px !important;
+    padding-left: 15px;
+    letter-spacing: .7px;
+    margin-top: -5px;
+  }
+  #text{
+    width: 100%;
+    max-width: 700px;
+    padding:  0 15px;
+    margin: 0 !important;
+    font-size: 15pt !important;
+    line-height: 17pt !important;
+  }
+  #artikelContainer{
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    /*padding: 0 15px;*/
+  }
+  .artikelWrap{
+    width: auto;
+    /* height: 123px; */
+    /*justify-content: space-between;*/
+    display: flex;
+    border-bottom: 2px solid #292a2c ;
+    justify-content: flex-start;  
+    align-items: flex-start;
+  }
+  .artikelElement{
+    display: flex;
+    /*width: 50%;*/
+    justify-content: space-between;
+    padding: 15px;
+    border-right: 2px solid #292a2c;
+  }
+  .artikelElement:last-child{
+  	border-right: none;
+  }
+  .artikelTitel{
+    font-family: "EditorialNew-Regular", serif !important;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 18pt;
+    transition: text-decoration 0.25s ease;
+  }
+  .artikelTitel:hover{
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+  }
+  .artikelAutor{
+    margin-top: 22px;
+    font-size: 10pt;
+    margin-left: 15px;
+    text-align: right;
+    /*max-width: 160px;*/
+  }
+  .pfeil {
+    align-self: flex-end ;
+    margin-left: auto;
+    align-self: stretch;
+    padding-right: 15px;
+    padding-left: 15px;
+    border: none;
+    border-left: solid;
+    border-width: 2px;
+    /* position: absolute; */
+    margin-right: 15px;
+  }
+  .pfeil:hover{
+    cursor: pointer;
+  }
+  #path4{
+    fill: #000;
+  }
+  .svgArrow{
+    width: 75px;
+    height: 50px;
+    stroke-width: 2;
+    margin-top: 89%;
+  }
+  .headlines{
+    font-family: "PPPangramSans-Bold", sans-serif !important;
+    font-weight: 400;
+    font-style: normal;
+    padding-left: 15px;
+    padding-top: 15px;
+    margin: 0 !important;
+    font-size: 0.7777777777777778rem !important;
+  }
+  .underline{
+    border-bottom: 2px solid #292a2c;
+  }
+  .tags{
+    background: #292a2c;
+    color: #7da1fd;
+    border-radius: 20px;
+    padding: 0px 9px 3px 9px  ;
+    white-space: nowrap;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    margin:  15px 5px 7px 0;
+    font-size: 13px !important;
+    margin-top: 0 !important;
+    font-family: "PPPangramSans-Bold", sans-serif !important;
+    letter-spacing: 0.5px;
+    font-weight: 100 !important;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #292a2c;
+  }
+  .tagContainer{
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    padding-left: 15px;
+  }
+  .tags:hover{
+  	cursor: pointer;
+    background: rgb(240, 232, 221, 0) !important;
+    color: #292a2c !important;
+    border-radius: 20px;
+    border-width: 1px;
+    border-style: solid;
+  }
+  /*style ende personen*/
+
+  /*style start orte*/
+  #orteGradientW{
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    position: absolute;
+    filter: blur(50px);
+    z-index: 1;
+    opacity: 0.6;
+  }
+  #purpleGradient{
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    z-index: -3;
+    position: absolute;
+ background: rgb(198,170,253);
+background: radial-gradient(circle, rgba(198,170,253,0) 39%, rgba(198,170,253,1) 79%, rgba(145,169,237,0) 100%, rgba(227,203,168,1) 220%);  
+  }
+  #topBGMap{
+    width: 100%;
+    height: 28%;
+    z-index: -2;
+    position: absolute;
+    top: 0;
+    background: rgb(240,232,222);
+    background: linear-gradient(180deg, rgba(240,232,222,1) 0%, rgba(218,218,218,0) 99%); 
+  }
+  
+  #bottomBGMap{
+     width: 100%;
+    height: 20%;
+    z-index: -2;
+    position: absolute;
+    bottom: 0;
+    background: rgb(240,232,222);
+    background: linear-gradient(0deg, rgba(240,232,222,1) 0%, rgba(218,218,218,0) 99%); 
+  }
+  #orte{ 
+    width: 100%;
+    display: flex;
+    z-index: 2;
+    position: relative;
+  }
+  #map { 
+    width: 50%;
+    height: auto;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 79px;
+    z-index: 0;
+    margin-right: 5px;
+  }
+  #orteInfo{
+    width: 50%;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 79px;
+    overflow: hidden;
+    margin-left: 5px;
+  }
+  #orteliste{
+  	margin-top: 25px;
+    display: flex;
+    width: 100%;
+    flex-wrap: wrap;
+    z-index: 2;
+    position: relative;
+  }
+  .ortElement{
+    display: flex;
+    align-items: center;
+    margin-right: 20px;
+
+  }
+  .ortElement:hover{
+  	cursor: pointer;
+  }
+  .ortElement > * {
+    margin: 4px 0px;
+    align-items: center;
+  }
+  .nummerOrt {
+    width: 25px;
+    height: 25px;
+    /*border-width: 2px;*/
+    /*border-style: solid;*/
+    /*border-radius: 20px;*/
+    text-align: center;
+    line-height: 1.3rem !important;
+    margin-bottom: 0 !important;
+    font-size: 1.3rem !important;
+    font-family: "editorialR", serif !important;
+    font-weight: 900 !important;
+    margin-right: 5px;
+  }
+  .ortName{
+    white-space: nowrap;
+  	font-size: 27px !important;
+	   line-height: 1.6rem !important;
+    font-family: "editorialR", serif !important;
+    margin-right: 20px;
+  }
+  .ortName:hover{
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+  }
+  #ortHeadImg{
+    width:  100%;
+    height: 250px;
+    border-radius: 79px;
+    background-size: 100%;
+  }
+  #orteContainer{
+    padding-bottom: 20px;
+  }
+  /*leaflet settings*/
+  .leaflet-popup-content-wrapper {
+    background-color: #222222;
+    border-radius: 2px;
+  }
+  .leaflet-popup-content-wrapper .leaflet-popup-content {
+    color:  #fff;
+    font-family: "Lexik-Regular-webfont", serif;
+    font-weight: 400;
+    font-style: normal;
+  }
+  .leaflet-popup-content-wrapper, .leaflet-popup-tip{
+    background: #222222;  
+  }
+  .marker {
+      top: -75px;
+      border-radius: 50px;
+      height: 80px;
+      transition: width 0.25s;
+      width: 80px;
+  }
+  /*.markerOpen{
+    width: 300px;
+  }*/
+  .flex{
+    display: flex;
+  }
+  :root {
+    --sizeM: 80px;
+    --sizeN: 44px;
+  }
+  .line{
+    width:  2px;
+    height: 20px;
+    background-color: rgb(240, 232, 221);
+    position: absolute;
+    left: 36px;
+    top: 85px;
+  }
+  .number{
+    /*display:  none;*/
+    position: absolute;
+    width: var(--sizeN);
+    height: var(--sizeN);
+    line-height: 52px;
+    right: 17px;
+    top: 19px;
+    /*border-radius: 50px;
+    border-style: solid;
+    border-width: 2px;*/
+    text-align: center;
+    font-family: editorialR;
+    font-size: var(--sizeN) ;
+    color: #202020;
+    z-index: 3;
+    position: absolute;
+    /*mix-blend-mode: darken;*/
+/*    -webkit-box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.75); 
+    box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.75);*/
+  }
+  .thumbWrap{
+    /*display: none ;*/
+    width: var(--sizeM);
+    height: var(--sizeM);
+    border-radius: 60px;
+    overflow: hidden;
+    position: absolute;
+    background-color: rgb(240, 232, 221);
+
+    /*top: -60px;*/
+    left: 0;
+  }
+  .markerThumb{
+    width: 150%;
+    position: absolute;
+    top: 0;
+    left:  -20px;
+    opacity: 0.5;
+
+  }
+  .infoText{
+    position: absolute;
+    margin-left: calc(var(--sizeM) + 15px);
+    /*top: -60px;*/
+    color:  #202020;
+    /*color: #fff;*/
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+  .infoText h4{
+    font-family: "EditorialNew-Regular", serif !important;
+    margin-top: 7px;
+    margin-bottom: 0;
+    opacity: 1;
+    white-space: nowrap;
+    line-height: 3.8rem !important;
+    font-size: 1.5rem !important;
+  }
+
+  .infoText p{
+    margin: 0;
+    font-family: Lexik;
+    padding-right: 90px;
+    font-size: 11pt;
+  }
+  /* .menuClose{ */
+    /*display: none;*/
+  /* } */
+  #orte{ 
+    width: 100%;
+  	margin-top: 15px;
+  }
+  /*KARTEI*/
+  #gradientKartei{
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    position: absolute;
+    z-index: 1;
+  }
+  #personenBlau{
+    position: absolute;
+    /*width: 100%;*/
+    /*height: 500px;*/
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: -3;
+    background: rgb(125,161,253);
+    background: linear-gradient(90deg, rgba(125,161,253,0) 0%, rgba(125,161,253,1) 50%, rgba(145,169,237,0) 100%, rgba(227,203,168,1) 220%);
+  }
+  #headlineWrap{
+    padding-top: 20px;
+    padding-bottom: 15px;
+  }
+  #ortNummer{
+    /*height: 40px;*/
+    flex-shrink: 0;
+    text-align: center;
+    /*line-height: 2.7 rem !important;*/
+  	font-size: 27px !important;
+  	color: #000;
+    border-radius: 40px;
+    margin-bottom: 0 !important;
+    margin-top: -4px;
+  }
+  #ortName{
+    font-size: 27px !important;
+    line-height: 33px !important;
+    padding-left: 10px;
+  }
+  #ortText{
+  	margin-bottom: 0 !important;
+    font-size: 15pt !important;
+    line-height: 17pt !important;
+  }
+  .pad15{
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  #artikelWrapOrt{
+    width: auto;
+    justify-content: space-between;
+    display: flex;
+    border-bottom: 2px solid #292a2c;
+    justify-content: flex-start;
+    align-items: flex-start;
+    position: relative;
+  }
+  .artikelElementOrt{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 170.5px;
+    height: inherit;
+    justify-content: space-between;
+    padding: 20px 15px;
+    border-right: 2px solid #292a2c;
+    align-self: stretch;
+  }
+  .artikelElementOrt:last-child{
+    border: none
+  }
+  #artElWrap{
+    display: flex;
+    width: 80%;
+    overflow-x: scroll;
+    position: relative;
+    scroll-behavior: smooth;
+  }
+   /* Hide scrollbar for Chrome, Safari and Opera */
+   #artElWrap::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  #artElWrap {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  /* .artikelElementOrt:last-child{
+  	border-right: none;
+  } */
+  .artikelTitel	 {
+    font-size: 27px !important;
+  	line-height: 1.7rem !important;
+  	font-weight: 100;
+  	margin-bottom: 0px !important;
+  }
+  .artikelAutor {
+  	margin-top:0;
+  	padding: 0;
+  }
+  #personenOrte{
+  	padding-bottom: 0px;
+  }
+  #ortePersonenContainer{
+    display: flex;
+    flex-wrap: wrap;
+    padding-bottom: 40px;
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  #ortePersonenContainer > .tags {
+    color: #c6aafd;
+  }
+  .svgArrow{
+    width: 75px;
+    height: 50px !important;
+    stroke-width: 2;
+  }
+  .leaflet-control { 
+    top: calc(50% - 32px) !important;
+    left: 4px;
+    position: absolute !important;
+  } 
+
+/*gradient gerald*/
+#gradientWrap{
+  position: absolute;
+  width:  100%;
+  height: 500px;
+  top: -747px;
+  filter:  blur(80px);
+  z-index: -1;
+  /*-webkit-gradient(linear, left top, right top, color-stop(0% rgba(0,0,0,0), color-stop(20% rgba(0,0,0,1)), color-stop(80% rgba(0,0,0,1)), color-stop(100% rgba(0,0,0,0)))*/
+  /*-webkit-mask-image: -webkit-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 100%);*/
+}
+
+#blau{
+  position: absolute;
+  width: 100%;
+  height: 500px;
+  top: 150px;
+  z-index: 99;
+  opacity: 0.9;
+   background: rgb(125,161,253);
+  background: linear-gradient(90deg, rgba(125,161,253,0) 0%, rgba(125,161,253,1) 50%, rgba(125,161,253,0) 100%); 
+}
+
+#peach{
+  width: 100%;
+  height: 500px;
+  position: absolute;
+  top: -64px;
+  z-index: 98;
+  opacity: 0.8;
+  filter: blur(50px);
+  background: rgb(255,205,145);
+  background: linear-gradient(0deg, rgba(255,205,145,0) 0%, rgba(255,205,145,1) 50%, rgba(255,205,145,0) 100%); 
+}
+#bgg{
+  width: 100%;
+  height: 300px;
+  position: absolute;
+  top: 550px;
+  background: rgb(240,232,222);
+  z-index: 100;
+  background: linear-gradient(0deg, rgba(240,232,222,1) 38%, rgba(240,232,222,0) 73%); 
+}
+#row_c8a305368{
+  padding-top: 20px;
+}
+#column_bdbfb414e, #column_4c4c9a0ab, #column_4c4c9a0ab{
+  display: none !important;
+}
+
+.spacer{
+  display: none !important;
+}
+
+.menu > li > a{
+  color: #fff !important;
+}
+
+/* hubert roacher bildwechsel breakpoint mobil */
+@media screen and (max-width: 992px){
+  .imgWrap3er:first-child {
+    display: none;
+  }
+  .imgWrap3er {
+    width: 100% !important;
+  }
+}
+
+/* semplice karten platzmachen */
+@media screen and (max-width: 768px){
+  .article-cards-overlay{
+    margin-bottom: 15px;
+  }
+  .spacer{
+    height: 0 !important;
+  }
+  #spacer{
+    display: none;
+  }
+  #gradientSmoke{
+    top: -1185px;
+    opacity: 0.4;
+  }
+}
+
+/* (min-width:992px) and */
+@media screen and (max-width: 1401px){
+  #column_0d12d0689{
+    display: flex;
+    flex-direction: column !important;
+  }
+  #autoren{
+    position: relative;
+    width: initial;
+    right: initial;
+    top: initial;
+    margin: 40px;
+    margin-top: 0;
+  }
+  /* #dreierWrap > :last-child{ */
+  .imgWrap3er:nth-child(3) {
+    display: none;
+  }
+  .imgWrap3er{
+    width: 49%;
+  }
+  #personenKarte{
+    flex-direction: column;
+  }
+  #portrait{
+    width: 100%;
+    background-size: cover;
+  }
+  #personeninfo{
+    width: 100%;
+  }
+  #orte {
+    flex-direction: column;
+  }
+  #map{
+    width: 100%;
+  height: 532px;
+  }
+  #orteInfo{
+    width: 100%;
+    margin-top: 15px;
+  }
+  /* mobil die abstaende ausgleichen von den pokemon karten */
+  /* #column_3c2b758e0,
+  #column_4c4c9a0ab,
+  #section_d444de883,
+  #column_bdbfb414e,
+  #column_f20e6fe57,
+  #column_damvvz3rg,
+  #column_53ffc836e{
+    display: none !important;
+  } */
+  #section_a0adf77ac,
+  #section_a0adf77ac,
+  #section_06621dc90{
+    padding: 0 !important;
+  }
+  #column_87f2456d0{
+    display: none !important;
+  }
+}
+
+
+/* artikelkarten hoehen */
+/* #row_6fff86aa8,
+#row_09df26507,
+#row_ad2ef427d,
+#row_4b00fb82f,
+#row_c8a305368{
+  height: 469px;
+  margin-top: 12px;
+} */

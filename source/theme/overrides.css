@@ -1,0 +1,78 @@
+/* Additions for the static rebuild (things Semplice's JavaScript used to do). */
+
+/* card hover: Semplice "Move up" motion (translateY -0.5556rem, 250ms) */
+.hover-lift{transition:transform .25s ease-in-out}
+.hover-lift:hover{transform:translateY(-.55556rem)}
+
+/* Personen card portrait was an <img> used as a background box */
+#portrait{background-color:transparent}
+
+/* keyboard users */
+.skip-link{position:absolute;left:-9999px;top:0;z-index:200;background:#222;color:#f0e8dd;padding:.5rem 1rem}
+.skip-link:focus{left:1rem;top:1rem}
+.listenElement,.ortElement,#dropdownP{cursor:pointer}
+#dropdownP{display:inline-block}
+:focus-visible{outline:2px solid #7da1fd;outline-offset:2px}
+
+/* the map container needs a size before Leaflet arrives */
+#map{min-height:532px;background:#202020;overflow:hidden}
+
+/* Article cards: the author line sits at a fixed inset from the top edge
+   (same as the 24px side padding) instead of floating above bottom-aligned
+   text with per-card leftover paddings. Space is reserved so long titles never
+   run into it. */
+#content-holder .column.article-cards-overlay{padding-top:3.05556rem!important}
+#content-holder .column.article-cards-overlay>.content-wrapper{position:static}
+#content-holder .column.article-cards-overlay .column-content.article-cards-author{position:absolute!important;top:1.33333rem!important;left:24px;right:24px;width:auto;padding:0!important;margin:0!important}
+
+/* Article cards in a 2:3 portrait format.
+   A zero-width ::after holds the height (padding % refers to the content width,
+   so 150% + 1.5 x the 48px side padding - the 55px top padding = 1.5 x card width).
+   The card is at least 2:3 and only grows if a text really needs more room. */
+#content-holder .column.article-cards-overlay{padding-left:24px!important;padding-right:24px!important;height:auto!important;align-self:flex-start}
+#content-holder .column.article-cards-overlay:after{content:"";flex:0 0 0;width:0;padding-top:calc(150% + 72px - 3.05556rem)}
+/* small tablets: two cards per row instead of three 183px slivers */
+@media screen and (min-width:768px) and (max-width:991.98px){#content-holder .column.article-cards-overlay{width:calc(50% - 12px)!important;max-width:calc(50% - 12px)!important;flex-basis:calc(50% - 12px)!important;margin-bottom:12px}}
+/* tablet widths: three narrow cards per row, tighten type and button spacing so 2:3 holds */
+@media screen and (min-width:768px) and (max-width:1169.98px){
+#content-holder .column.article-cards-overlay h2{font-size:1.33333rem!important;line-height:1.44444rem!important}
+#content-holder .column.article-cards-overlay p{font-size:.77778rem!important;line-height:1.05556rem!important}
+#content-holder .column.article-cards-overlay [data-module=button]{padding-top:.66667rem!important;padding-bottom:.88889rem!important}}
+
+/* Personen/Orte pills: optically centred text. With line-height 1 the PP Pangram
+   Sans metrics (ascent .81, descent .23, cap height .71) need ~1.7px more space
+   above than below the text, hence 7px / 4px (equal 8px from edge to cap height and to baseline). */
+.tags{display:inline-block;line-height:1!important;padding:7px 10px 4px!important;vertical-align:middle}
+
+/* Footer: the three logos stacked in a vertical line, centred on one axis right next to the Kontakt box, first one level with the top of the Kontakt box */
+#content-holder .footer-logos .content-wrapper{display:flex;flex-direction:column;align-items:center;gap:2.22222rem;width:auto;margin-left:0}
+#content-holder .column.footer-logos .content-wrapper .column-content{width:auto}
+#content-holder #content_lfwf0logo img,#content-holder #content_lzkf0logo img{width:126px}
+#content-holder #content_dda15bc83 img{width:98px;margin-top:-10px}/* the stamp image has ~10px transparent margin on top */
+/* Footer: Impressum and Datenschutzerklärung next to each other */
+#content-holder .footer-links .content-wrapper{display:flex;flex-wrap:wrap;column-gap:1.11111rem}
+#content-holder .column.footer-links .content-wrapper .column-content{width:auto}
+
+/* Rohracher card: the three photos are stretched flex items. Safari kept their
+   (shrunk) intrinsic width while stretching the height, so they looked squashed.
+   Size them explicitly from the photo's aspect ratio and crop if space runs out. */
+#dreierWrap img{height:100%;width:auto;aspect-ratio:1120/1623;flex:0 1 auto;min-width:0;object-fit:cover}
+#content-holder #column_cc8f70cd1{padding-bottom:2.22222rem}
+@media screen and (max-width:767.98px){#content-holder .footer-logos .content-wrapper{margin-left:0;align-items:flex-start}}
+
+/* Bibliographie: header bar toggles the list (see site.js) */
+[data-collapse-toggle]{cursor:pointer;user-select:none}
+[data-collapse-toggle] .is-content{display:flex;align-items:center;justify-content:space-between}
+[data-collapse-toggle] .is-content:after{content:"";flex:none;width:.44444rem;height:.44444rem;margin:0 .22222rem 0 .55556rem;border-right:2px solid #f0e8dd;border-bottom:2px solid #f0e8dd;transform:translateY(-25%) rotate(45deg);transition:transform .2s ease}
+[data-collapse-toggle].is-open .is-content:after{transform:translateY(25%) rotate(-135deg)}
+[data-collapse-toggle]:focus-visible{outline:2px solid #7da1fd;outline-offset:2px}
+[data-collapse-body][hidden]{display:none!important}
+
+/* Image captions: set flush against the image edge (24px column gutter) instead of
+   centred in their own column. The image is aligned toward its caption (build.py).
+   On phones the caption sits under the image and stays centred. */
+@media screen and (min-width:768px){
+#content-holder .img-caption.caption-right .is-content,#content-holder .img-caption.caption-right .is-content *{text-align:left!important}
+#content-holder .img-caption.caption-left .is-content,#content-holder .img-caption.caption-left .is-content *{text-align:right!important}
+#content-holder .img-caption .column-content{padding-left:0!important;padding-right:0!important;margin-left:0!important;margin-right:0!important}}
+@media screen and (max-width:767.98px){#content-holder [class*=captioned-] .ce-image{text-align:center}}

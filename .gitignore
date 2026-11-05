@@ -1,0 +1,16 @@
+# built output (GitHub Actions builds it)
+site/
+# images downloaded from Sanity during the build
+source/media/sanity/
+# local tooling
+studio/node_modules/
+studio/dist/
+studio/.sanity/
+__pycache__/
+*.pyc
+# macOS
+._*
+.DS_Store
+# commercially licensed webfonts: only the encrypted source/fonts.enc is committed (see tools/fonts.py)
+source/fonts/
+.fonts-key
