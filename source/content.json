@@ -969,7 +969,8 @@
         "column_61336fdd8": [
          "content_7383e60e0",
          "content_19719d24a"
-        ]
+        ],
+        "column_aboutpad1": []
        }
       },
       "row_pq0hfppjc": {
@@ -1332,7 +1333,7 @@
     },
     "column_7eeeb14ad": {
      "width": {
-      "xl": "4"
+      "xl": "5"
      },
      "options": {},
      "layout": {},
@@ -1388,7 +1389,7 @@
     },
     "column_febfad193": {
      "width": {
-      "xl": "4"
+      "xl": "5"
      },
      "options": {},
      "layout": {
@@ -1800,7 +1801,7 @@
     },
     "column_18e45d71d": {
      "width": {
-      "xl": "4"
+      "xl": "5"
      },
      "options": {},
      "layout": {},
@@ -1939,7 +1940,7 @@
     },
     "column_pfyuh83bk": {
      "width": {
-      "xl": "2"
+      "xl": "3"
      },
      "options": {},
      "layout": {},
@@ -1952,6 +1953,23 @@
       "end": {}
      },
      "type": "spacer"
+    },
+    "column_aboutpad1": {
+     "width": {
+      "xl": "1"
+     },
+     "options": {},
+     "layout": {},
+     "styles": {
+      "xl": {}
+     },
+     "motions": {
+      "active": {},
+      "start": {},
+      "end": {}
+     },
+     "type": "spacer",
+     "classes": "hide-for-mobile hide-for-tablet-portrait"
     }
    }
   },
