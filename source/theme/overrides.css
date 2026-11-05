@@ -76,3 +76,8 @@
 #content-holder .img-caption.caption-left .is-content,#content-holder .img-caption.caption-left .is-content *{text-align:right!important}
 #content-holder .img-caption .column-content{padding-left:0!important;padding-right:0!important;margin-left:0!important;margin-right:0!important}}
 @media screen and (max-width:767.98px){#content-holder [class*=captioned-] .ce-image{text-align:center}}
+
+/* The orange glow behind the Caruso teaser (#gradientSmoke) reaches into the card rows
+   above and below it. Its section has z-index 23, so Safari painted the glow over the
+   cards. Card sections get their own layer above it. */
+#content-holder .content-block.article-cards{z-index:30}
