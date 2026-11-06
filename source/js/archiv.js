@@ -74,12 +74,34 @@
     box.textContent = '';
     const rows = [el('div', 'artikelWrap'), el('div', 'artikelWrap')];
     box.append(...rows);
+    // more than 4 articles: each row becomes a track showing two at a time, the arrow pages through
+    const paged = p.artikel.length > 4;
+    const tracks = rows.map((r) => (paged ? r.appendChild(el('div', 'artTrack')) : r));
     p.artikel.forEach((a, k) => {
       const item = el('div', 'artikelElement');
       item.append(articleLink(a), el('h5', 'artikelAutor', a.author));
-      rows[k % 2].append(item);
+      tracks[k % 2].append(item);
     });
-    if (p.artikel.length > 4) rows.forEach((r) => r.append(el('div', 'pfeil', ARROW)));
+    if (paged) {
+      box.classList.add('is-paged');
+      let current = 0;
+      const next = () => {
+        // how many articles fit next to each other (2 on desktop, 1 on phones)
+        const first = tracks[0].children[0];
+        const visible = Math.max(1, Math.round(tracks[0].clientWidth / first.offsetWidth));
+        const last = Math.max(...tracks.map((t) => t.children.length)) - visible;
+        current = current >= last ? 0 : current + 1;
+        tracks.forEach((t) => t.scrollTo({ left: first.offsetWidth * current, behavior: 'smooth' }));
+      };
+      rows.forEach((r) => {
+        const arrow = el('div', 'pfeil', ARROW);
+        arrow.setAttribute('role', 'button');
+        arrow.setAttribute('aria-label', 'Weitere Artikel');
+        arrow.tabIndex = 0;
+        activate(arrow, next);
+        r.append(arrow);
+      });
+    }
     if (p.artikel.length < 2) rows[1].style.display = 'none';
 
     tags($('personenContainer'), p.personen, '#personenKarte', (name) => {

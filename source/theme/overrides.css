@@ -106,3 +106,17 @@
 #content-holder .cms-quelle{opacity:.75}
 /* decorative glows never block clicks */
 #gradientSmoke,#gradientSmoke *,#gradientWrap,#gradientWrap *,#orteGradientW,#orteGradientW *{pointer-events:none}
+
+/* Personen card with more than 4 articles: two per row, arrow pages through (archiv.js) */
+#artikelContainer.is-paged{width:100%}
+#artikelContainer.is-paged .artikelWrap{align-items:stretch;width:100%;min-width:0}
+#artikelContainer.is-paged .artTrack{display:flex;flex:1 1 0;width:0;min-width:0;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none}
+#artikelContainer.is-paged .artTrack::-webkit-scrollbar{display:none}
+#artikelContainer.is-paged .artikelElement{flex:0 0 50%;min-width:0;border-right:2px solid #292a2c}
+#artikelContainer.is-paged .pfeil{flex:0 0 auto;width:105px;display:flex;align-items:center;justify-content:center;margin:0;padding:0 15px}
+#artikelContainer.is-paged .pfeil .svgArrow{margin-top:0;width:75px;flex:none}
+@media screen and (max-width:767.98px){
+#artikelContainer.is-paged .artikelElement{flex-basis:100%;flex-direction:column;justify-content:flex-start;gap:.4rem}
+#artikelContainer.is-paged .artikelAutor{margin-left:0;text-align:left}
+#artikelContainer.is-paged .pfeil{width:64px;padding:0 10px}
+#artikelContainer.is-paged .pfeil .svgArrow{width:44px}}
