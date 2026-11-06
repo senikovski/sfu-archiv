@@ -36,6 +36,7 @@ tools/
   sanity_state.py            fingerprint of the Sanity content (used to skip unneeded builds)
   fonts.py                   encrypt/decrypt the font files
   import_to_sanity.py        one-time import of the CSV tables into Sanity
+  import_cards_to_sanity.py  one-time import of the original homepage cards into Sanity
   export_from_wordpress.py   one-time export from the old WordPress backup
 .github/workflows/build.yml  builds + publishes the site automatically
 ```
@@ -53,6 +54,28 @@ invited under sanity.io/manage → project "SFU" → Members).
 - **Artikel**: title + author, and which article page of the website it links to.
   The article *pages* themselves are not in Sanity (they're in `content.json`).
 - "Reihenfolge" sets the position in the name list / the number on the map.
+
+### Artikel: homepage cards and new articles
+
+Every article is an **Artikel** entry in Sanity with three tabs:
+
+- **Kachel auf der Startseite** – *Darstellung* (normal card / highlighted full-width
+  card / not on the homepage), *Reihenfolge* (the existing articles are numbered
+  10, 20, 30 …; use e.g. 25 to place a new one in between), card title, teaser and image.
+  Normal cards are laid out in rows of three, highlighted ones get their own row.
+- **Artikelseite** – for the 15 original articles only *Bestehende Seite* is set
+  (their pages stay exactly as designed). For a **new article** leave that empty and
+  fill in: Web-Adresse (click "Generate"), colour, Titelbild, introduction, author
+  box, the text (paragraphs, sub-headings, lists, quotes, images with caption and
+  source), Bibliographie and optionally the three "Weiterlesen" articles (default:
+  the next ones in homepage order).
+- **Personen & Orte** – the article appears on these people's/places' cards on the
+  homepage, and as tags on the article page that jump to them.
+
+New cards and pages are generated from copies of the original parts (the
+"Psychotechnik" card, the Caruso highlight, the Bühler article), so they look like
+the rest of the site. If you edit the card text or image of one of the original
+articles, its card is regenerated the same way.
 
 After you click **Publish**, the website updates by itself: GitHub checks Sanity every
 10 minutes and rebuilds when something changed (a build takes ~1–2 minutes). To

@@ -107,6 +107,10 @@
     start = parseInt(sessionStorage.getItem('person'), 10) || 0;
     sessionStorage.removeItem('person');
   } catch (e) { /* storage unavailable */ }
+  // tags on article pages link here as ?person=Name#personenKarte or ?ort=Name#orte
+  const params = new URLSearchParams(location.search);
+  const wantedPerson = namen.indexOf(params.get('person'));
+  if (wantedPerson >= 0) start = wantedPerson;
   if ($('personenKarte')) showPerson(start);
 
   // =========================================================== Orte
@@ -185,7 +189,8 @@
     item.setAttribute('role', 'button');
     activate(item, () => { smoothTo(mapHeading); openOrt(+item.dataset.index); });
   });
-  showOrtCard(0);
+  const wantedOrt = orte.findIndex((o) => o.name === params.get('ort'));
+  if (wantedOrt >= 0) openOrt(wantedOrt); else showOrtCard(0);
 
   function initMap() {
     map = L.map(mapEl, { center: [48.16556339896821, 16.367312309824765], zoom: 12, zoomControl: true });

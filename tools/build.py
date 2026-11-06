@@ -10,8 +10,10 @@ so the original design is kept without WordPress, jQuery or Semplice's
 
 Usage:  python3 tools/build.py            (needs Pillow for image conversion)
 """
+import copy
 import csv
 import hashlib
+import itertools
 import html
 import json
 import re
@@ -180,6 +182,9 @@ def srcset(rel, page, max_width):
 
 
 def attachment_file(aid):
+    if str(aid).startswith('media:'):
+        rel = str(aid)[6:]
+        return nfc(rel) if media_exists(rel) else None
     a = ATTACH.get(str(aid))
     if not a or not media_exists(a['file']):
         return None
@@ -357,6 +362,7 @@ def clean_code(content, page):
 
     content = re.sub(r'<(script|style)>(.*?)</\1>', empty, content, flags=re.S)
     content = content.replace('<img id="portrait" src="">', '<div id="portrait" role="img"></div>')
+    content = content.replace('__HOME__', page.url(''))  # links from new articles to the homepage archive
     return page.rewrite(content)
 
 
@@ -388,7 +394,7 @@ def module_image(m, cid, page, ctx):
     rel = attachment_file(aid)
     if not rel:
         return ''
-    a = ATTACH[str(aid)]
+    a = ATTACH.get(str(aid)) or {'alt': m.get('options', {}).get('alt', '')}
     display = round(GRID_WIDTH * ctx['col_width'] / 12)
     alt = html.escape(a.get('alt') or a.get('title') or '')
     if rel.lower().endswith('.svg'):
@@ -736,12 +742,12 @@ PERSON_QUERY = """*[_type == "person" && !(_id in path("drafts.**"))] | order(co
   name, jahre, text,
   "portrait": portrait.asset->{_id, url, extension},
   "thumbnail": thumbnail.asset->{_id, url, extension},
-  "artikel": artikel[]->{titel, autor, seite},
+  "artikel": artikel[]->{titel, autor, seite, "slug": slug.current, "hasContent": defined(inhalt[0])},
   "personen": personen[]->name, "orte": orte[]->name, weitereOrte
 }"""
 ORT_QUERY = """*[_type == "ort" && !(_id in path("drafts.**"))] | order(coalesce(reihenfolge, 100000) asc, name asc) {
   name, text, adresse, lage, "bild": bild.asset->{_id, url, extension},
-  "artikel": artikel[]->{titel, autor, seite}, "personen": personen[]->name
+  "artikel": artikel[]->{titel, autor, seite, "slug": slug.current, "hasContent": defined(inhalt[0])}, "personen": personen[]->name
 }"""
 
 
@@ -759,7 +765,7 @@ SSL = _ssl_context()
 
 
 def sanity_query(cfg, query):
-    url = (f"https://{cfg['projectId']}.apicdn.sanity.io/v{cfg.get('apiVersion', '2024-01-01')}/data/query/"
+    url = (f"https://{cfg["projectId"]}.api.sanity.io/v{cfg.get('apiVersion', '2024-01-01')}/data/query/"
            f"{cfg['dataset']}?query={urllib.parse.quote(query)}")
     with urllib.request.urlopen(url, timeout=60, context=SSL) as r:
         return json.load(r)['result']
@@ -783,7 +789,7 @@ def load_archive():
     if SANITY_CONFIG.exists() and not USE_CSV:
         cfg = json.loads(SANITY_CONFIG.read_text(encoding='utf-8'))
         def arts(items):
-            return [((a.get('titel') or '').strip(), (a.get('autor') or '').strip(), SLUGS.get(a.get('seite') or ''))
+            return [((a.get('titel') or '').strip(), (a.get('autor') or '').strip(), article_pid(a))
                     for a in (items or []) if a and (a.get('titel') or '').strip()]
         personen = [{
             'name': (p.get('name') or '').strip(), 'jahr': (p.get('jahre') or '').strip(), 'text': (p.get('text') or '').strip(),
@@ -797,6 +803,14 @@ def load_archive():
             'lat': o['lage']['lat'], 'lng': o['lage']['lng'], 'img': sanity_image(o.get('bild')),
             'artikel': arts(o.get('artikel')), 'personen': [n for n in (o.get('personen') or []) if n],
         } for o in sanity_query(cfg, ORT_QUERY) if o.get('name') and (o.get('lage') or {}).get('lat') is not None]
+        # links set on the article side ("Personen & Orte" tab) count too
+        for a in load_cms_articles():
+            pid = article_pid(a)
+            entry = ((a.get('titel') or '').strip(), (a.get('autor') or '').strip(), pid)
+            for target, names in ((personen, a.get('personen')), (orte, a.get('orte'))):
+                for item in target:
+                    if item['name'] in (names or []) and not any((pid and x[2] == pid) or x[0] == entry[0] for x in item['artikel']):
+                        item['artikel'].append(entry)
         print(f'  archive: Sanity project {cfg["projectId"]} ({len(personen)} Personen, {len(orte)} Orte)')
         return personen, orte
 
@@ -867,6 +881,8 @@ def update_counters(ram):
                 m['options']['label'] = f'{len(personen)} Personen'
             elif re.fullmatch(r'\d+ Orte', label):
                 m['options']['label'] = f'{len(orte)} Orte'
+            elif re.fullmatch(r'\d+ Artikel', label) and CMS_PAGES:
+                m['options']['label'] = f'{int(label.split()[0]) + len(CMS_PAGES)} Artikel'
 
 
 def esc(s):
@@ -1132,6 +1148,9 @@ def render_page(pid):
         prepare_home(ram)
         archive_data(page)
         update_counters(ram)
+        rebuild_home_cards(ram)
+    elif p['type'] == 'project':
+        apply_weiterlesen(pid, ram)
     page.motion_css_enabled = ram.get('branding', {}).get('scroll_reveal') == 'disabled'
     prepare_captions(ram)
     if p['type'] == 'project' and ram.get('branding', {}).get('background-color'):
@@ -1199,6 +1218,572 @@ def render_page(pid):
 
 
 # =====================================================================
+# Articles from Sanity: homepage cards (normal / highlighted), new article
+# pages and "Weiterlesen". New parts are cloned from real sections of the
+# original site, so they render with exactly the same CSS.
+# =====================================================================
+
+ARTICLE_QUERY = """*[_type == "artikel" && !(_id in path("drafts.**"))] | order(coalesce(reihenfolge, 100000) asc, _createdAt asc) {
+  _id, titel, kachelTitel, autor, anzeige, reihenfolge, teaser, seite, "slug": slug.current, farbe, untertitel, autorInfo,
+  "kachelbild": kachelbild.asset->{_id, url, extension, originalFilename},
+  "titelbild": titelbild.asset->{_id, url, extension, originalFilename},
+  inhalt[]{..., _type == "image" => {"asset": asset->{_id, url, extension}}},
+  bibliographie, "personen": personen[]->name, "orte": orte[]->name, "weiterlesen": weiterlesen[]->_id
+}"""
+PAGE_COLORS = {'#f0e8dd', '#eacfff', '#b0dfae', '#ffcd91'}
+CMS_ARTICLES = None
+CMS_PAGES = {}          # pid -> Sanity article, for the new pages
+TEMPLATES = {}          # untouched copies of the template pages
+_ids = itertools.count(1)
+
+
+def load_cms_articles():
+    global CMS_ARTICLES
+    if CMS_ARTICLES is None:
+        CMS_ARTICLES = []
+        if SANITY_CONFIG.exists() and not USE_CSV:
+            cfg = json.loads(SANITY_CONFIG.read_text(encoding='utf-8'))
+            CMS_ARTICLES = sanity_query(cfg, ARTICLE_QUERY)
+    return CMS_ARTICLES
+
+
+def article_pid(a):
+    """Page id an article entry links to: an existing page, a new Sanity page, or None."""
+    if not a:
+        return None
+    if a.get('seite') and a['seite'] in SLUGS and not str(SLUGS[a['seite']]).startswith('cms-'):
+        return SLUGS[a['seite']]
+    if a.get('slug') and (a.get('inhalt') or a.get('hasContent')):
+        pid = f"cms-{a['slug']}"
+        return pid if pid in PAGES or a.get('inhalt') else None
+    return None
+
+
+def nid(kind):
+    return f'{kind}_cms{next(_ids):05d}'
+
+
+def snapshot_templates():
+    for key, pid in (('home', HOME_ID), ('article', '328')):
+        TEMPLATES[key] = copy.deepcopy(PAGES[pid]['content'])
+
+
+def plain(text):
+    return re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', ' ', text or ''))).strip()
+
+
+def retext(template_html, inner):
+    """Keep the opening tag chain of the template's first text (fonts, sizes, colours) around new content."""
+    m = re.match(r'\s*((?:<(?!/)[a-zA-Z][^>]*>\s*)+)', template_html)
+    opens = m.group(1) if m else '<p>'
+    names = [n for n in re.findall(r'<([a-zA-Z][a-zA-Z0-9]*)', opens) if n.lower() not in ('br', 'img', 'wbr', 'hr')]
+    return opens + inner + ''.join(f'</{n}>' for n in reversed(names))
+
+
+def recolor(obj, color, original='#eacfff'):
+    """Cloned article parts carry the template's page colour (lilac); swap it for the article's colour."""
+    if color == original:
+        return obj
+    r, g, b = (int(original[i:i + 2], 16) for i in (1, 3, 5))
+    nr, ng, nb = (int(color[i:i + 2], 16) for i in (1, 3, 5))
+    text = json.dumps(obj, ensure_ascii=False)
+    text = re.sub(re.escape(original), color, text, flags=re.I)
+    text = text.replace(f'rgb({r}, {g}, {b})', f'rgb({nr}, {ng}, {nb})')
+    return json.loads(text)
+
+
+def clone_item(src, item_id, dst, color=None):
+    kind = item_id.split('_')[0]
+    new = nid(kind)
+    item = copy.deepcopy(src[item_id])
+    dst[new] = recolor(item, color) if color else item
+    return new, dst[new]
+
+
+def clone_section(src, sid, dst, color=None, skip=()):
+    """Deep-copy a section with fresh ids. Returns (new_sid, rows, {old_id: new_id})."""
+    new_sid, _ = clone_item(src, sid, dst, color)
+    rows, ids = {}, {}
+    section = src['order'][sid]
+    for rid, row in ({'row': section} if 'columns' in section else section).items():
+        cols = {}
+        for cid, items in row['columns'].items():
+            if cid not in src or cid in skip:
+                continue
+            ncid, _ = clone_item(src, cid, dst, color)
+            ids[cid] = ncid
+            mods = []
+            for mid in items:
+                if mid in src and mid not in skip:
+                    nmid, _ = clone_item(src, mid, dst, color)
+                    ids[mid] = nmid
+                    mods.append(nmid)
+            cols[ncid] = mods
+        rows[nid('row')] = {'columns': cols}
+    return new_sid, rows, ids
+
+
+def cms_image(asset):
+    rel = sanity_image(asset) if asset else None
+    return f'media:{rel}' if rel else None
+
+
+def card_fields(a):
+    return {
+        'title': (a.get('kachelTitel') or a.get('titel') or '').strip(),
+        'teaser': (a.get('teaser') or '').strip(),
+        'author': (a.get('autor') or '').strip(),
+        'image': cms_image(a.get('kachelbild')) or cms_image(a.get('titelbild')),
+        'image_name': ((a.get('kachelbild') or {}).get('originalFilename') or ''),
+    }
+
+
+def esc_lines(text):
+    return '<br>'.join(esc(line) for line in text.split('\n'))
+
+
+# ---- the original cards on the homepage
+
+def home_snippets():
+    """Original homepage cards by article slug: normal cards (column) and the two highlights."""
+    T = TEMPLATES['home']
+    titles = {p['slug']: plain(page_title(p).replace(' – ' + SITE['tagline'], '')).lower()
+              for p in PAGES.values() if p['type'] == 'project'}
+    normal = {}
+    keys = list(T['order'])
+    for sid in keys[keys.index('section_024ab619f'):keys.index('section_38e379635')]:
+        section = T['order'][sid]
+        for row in ({'r': section} if 'columns' in section else section).values():
+            for cid, items in row['columns'].items():
+                if 'article-cards-overlay' not in (T.get(cid, {}).get('classes') or ''):
+                    continue
+                mods = [T[i] for i in items if i in T]
+                texts = [plain(m['content']['xl']) for m in mods if m['module'] == 'text']
+                button = next((m for m in mods if m['module'] == 'button'), None)
+                linked = PAGES.get(str((button or {}).get('options', {}).get('link_project')), {}).get('slug')
+                title = texts[1] if len(texts) > 1 else ''
+                by_title = next((sl for sl, t in titles.items() if title.lower() and (title.lower() in t or t in title.lower())), None)
+                slug = by_title or linked
+                if slug and (slug not in normal or (by_title and not normal[slug]['by_title'])):
+                    rel = attachment_file(T[cid].get('styles', {}).get('xl', {}).get('background-image'))
+                    normal[slug] = {'col': cid, 'items': items, 'by_title': bool(by_title),
+                                    'title': title, 'author': texts[0] if texts else '',
+                                    'teaser': texts[2] if len(texts) > 2 else '', 'image': rel,
+                                    'button': next((i for i in items if T.get(i, {}).get('module') == 'button'), None)}
+    features = {
+        '07_artikel_rohracher': {'kind': 'rohracher', 'title': 'Hubert Rohracher – Eine turbulente Karriere',
+                                 'author': 'Martin Wieser', 'teaser': '', 'image': 'theme/rohracher3.jpg'},
+        '05_artikel_selbstvaerstaendlich_caruso': {
+            'kind': 'caruso', 'title': plain(T['content_8d3ee7ff0']['content']['xl']).replace('- ', '-'),
+            'author': plain(T['content_546d205d5']['content']['xl']), 'teaser': plain(T['content_ca756d53d']['content']['xl']),
+            'image': '2021/08/unvorstellbare-grausamkeit-die.jpg'},
+    }
+    return normal, features
+
+
+def unchanged(fields, original):
+    """True if the editor left the card as imported (then the original markup is kept as-is)."""
+    same = lambda a, b: re.sub(r'\W+', '', (a or '').lower()) == re.sub(r'\W+', '', (b or '').lower())
+    return (same(fields['title'], original['title']) and same(fields['author'], original['author'])
+            and (not original.get('teaser') or same(fields['teaser'], original['teaser']))
+            and (not fields['image_name'] or not original.get('image') or Path(original['image']).name.lower() == fields['image_name'].lower()))
+
+
+def make_card(dst, a, pid):
+    """New normal card, cloned from the original "Psychotechnik" card."""
+    T = TEMPLATES['home']
+    f = card_fields(a)
+    col_id = 'column_9c3987c3e'
+    new_col, col = clone_item(T, col_id, dst)
+    if f['image']:
+        col['styles']['xl']['background-image'] = f['image']
+    else:
+        col['styles']['xl'].pop('background-image', None)
+    items = []
+    for mid in T['order']['section_3a3c5a84e']['row_c8a305368']['columns'][col_id]:
+        nmid, m = clone_item(T, mid, dst)
+        if mid == 'content_969eafae8':
+            m['content']['xl'] = retext(m['content']['xl'], esc(f['author']))
+        elif mid == 'content_b8bc565ef':
+            m['content']['xl'] = retext(m['content']['xl'], esc(f['title']))
+        elif mid == 'content_985e84550':
+            if not f['teaser']:
+                continue
+            m['content']['xl'] = retext(m['content']['xl'], esc(f['teaser']))
+        elif m['module'] == 'button':
+            m['options'].update({'link_type': 'project', 'link_project': pid, 'link_target': 'same'})
+        items.append(nmid)
+    return new_col, items
+
+
+def make_feature(dst, a, pid):
+    """New highlighted card (full width), cloned from the original Caruso highlight."""
+    T = TEMPLATES['home']
+    f = card_fields(a)
+    new_sid, rows, ids = clone_section(T, 'section_68e338144', dst, skip=('content_c9879a8fd',))
+    dst[new_sid]['classes'] = 'cms-feature'  # content row above the glow, like #row_6254268f8 of the original
+    for old, new in ids.items():
+        m = dst[new]
+        if old == 'content_8d3ee7ff0':
+            m['content']['xl'] = retext(m['content']['xl'], esc(f['title']))
+        elif old == 'content_ca756d53d':
+            m['content']['xl'] = retext(m['content']['xl'], esc(f['teaser']))
+        elif old == 'content_546d205d5':
+            m['content']['xl'] = retext(m['content']['xl'], esc(f['author']))
+        elif old == 'content_03c74b488':
+            m['options'].update({'link_type': 'project', 'link_project': pid, 'link_target': 'same'})
+        elif old == 'column_a0b98d04a' and f['image']:
+            m['styles'] = {'xl': {'background_type': 'img', 'background-image': f['image'], 'background-size': 'cover',
+                                  'background-position': '50% 50%', 'border-radius': '4.38889rem', 'height': '23.44444rem'},
+                           'sm': {'height': '18rem'}, 'xs': {'height': '18rem'}}
+    return new_sid, rows
+
+
+def cards_section(dst, columns):
+    """A row of up to three cards, in a copy of an original card section."""
+    T = TEMPLATES['home']
+    sid, _ = clone_item(T, 'section_3a3c5a84e', dst)
+    return sid, {nid('row'): {'columns': dict(columns)}}
+
+
+def visible_articles():
+    out = []
+    for a in load_cms_articles():
+        pid = article_pid(a)
+        if pid and a.get('anzeige') in ('normal', 'hervorgehoben'):
+            out.append((a, pid))
+    return out
+
+
+def rebuild_home_cards(ram):
+    """Lay out the homepage cards in the order and style chosen in Sanity."""
+    arts = visible_articles()
+    if not arts:
+        return  # nothing imported yet (or CSV mode): keep the original homepage
+    normal, features = home_snippets()
+    T = TEMPLATES['home']
+    order = ram['order']
+    keys = list(order)
+    start, end = keys.index('section_024ab619f'), keys.index('section_38e379635')
+    new_order = {k: order[k] for k in keys[:start]}
+    new_order['section_024ab619f'] = {'row_f282d287a': order['section_024ab619f']['row_f282d287a']}  # "Artikel" heading
+    pending = []
+    last = {'kind': 'rohracher'}  # what came before: the original spacing depends on it
+    GAP = '1.1111111111111112rem'  # 20px between card rows and around highlights, as in the original
+
+    def flush(before_feature=False):
+        while pending:
+            group, pending[:] = pending[:3], pending[3:]
+            sid, rows = cards_section(ram, group)
+            styles = ram[sid].setdefault('styles', {}).setdefault('xl', {})
+            if last['kind'] != 'rohracher':
+                styles['padding-top'] = GAP
+            else:
+                styles['padding-bottom'] = GAP
+            if before_feature and not pending:
+                styles['padding-bottom'] = GAP
+            new_order[sid] = rows
+            last['kind'] = 'cards'
+
+    for a, pid in arts:
+        slug = PAGES[pid]['slug']
+        f = card_fields(a)
+        if a['anzeige'] == 'hervorgehoben':
+            orig = features.get(slug)
+            rohracher = bool(orig and unchanged(f, orig) and orig['kind'] == 'rohracher')
+            flush(before_feature=not rohracher)
+            if rohracher:
+                sid, _ = clone_item(T, 'section_024ab619f', ram)
+                new_order[sid] = {r: order['section_024ab619f'][r] for r in ('row_fe9a156fe', 'row_ea72962c0', 'row_ae20db06a')}
+                last['kind'] = 'rohracher'
+            elif orig and unchanged(f, orig) and orig['kind'] == 'caruso':
+                new_order['section_68e338144'] = order['section_68e338144']
+                last['kind'] = 'feature'
+            else:
+                sid, rows = make_feature(ram, a, pid)
+                new_order[sid] = rows
+                last['kind'] = 'feature'
+        else:
+            orig = normal.get(slug)
+            if orig and unchanged(f, orig):
+                if orig['button']:  # some original cards linked to the wrong article
+                    ram[orig['button']]['options'].update({'link_type': 'project', 'link_project': pid})
+                pending.append((orig['col'], orig['items']))
+            else:
+                pending.append(make_card(ram, a, pid))
+    flush()
+    for k in keys[end:]:
+        new_order[k] = order[k]
+    ram['order'] = new_order
+
+
+# ---- "Weiterlesen" at the end of article pages
+
+def weiterlesen_targets(pid, a):
+    arts = visible_articles()
+    by_id = {x['_id']: (x, p) for x, p in arts}
+    chosen = [by_id[i] for i in (a or {}).get('weiterlesen') or [] if i in by_id]
+    if chosen or not a:
+        return chosen[:3]
+    ids = [p for _, p in arts]
+    if pid not in ids:
+        return [x for x in arts if x[1] != pid][:3]
+    i = ids.index(pid)
+    ring = arts[i + 1:] + arts[:i]
+    return ring[:3]
+
+
+def make_weiterlesen(dst, pid, a, color):
+    T = TEMPLATES['article']
+    sections = {}
+    head_sid, head_rows, _ = clone_section(T, 'section_ge0kj0ney', dst, color)
+    sections[head_sid] = head_rows
+    cards_sid, _ = clone_item(T, 'section_a27697b23', dst, color)
+    cols = {}
+    targets = weiterlesen_targets(pid, a)
+    for target, tpid in targets:
+        c, items = make_card(dst, target, tpid)
+        cols[c] = items
+    sections[cards_sid] = {nid('row'): {'columns': cols}}
+    end_sid, end_rows, _ = clone_section(T, 'section_38xs9hy0y', dst, color)
+    sections[end_sid] = end_rows
+    return sections if targets else {}
+
+
+def apply_weiterlesen(pid, ram):
+    """Existing articles keep their original "Weiterlesen" cards unless chosen in Sanity."""
+    if str(pid).startswith('cms-'):
+        return
+    a = next((x for x in load_cms_articles() if article_pid(x) == pid), None)
+    if not a or not a.get('weiterlesen'):
+        return
+    order = ram['order']
+    keys = [k for k in order if k != 'cover']
+    tail = []
+    for sid in reversed(keys):
+        if (ram.get(sid, {}).get('styles', {}).get('xl', {}).get('background-color') or '').lower() != '#222222':
+            break
+        tail.append(sid)
+    if not tail:
+        return
+    new = {k: v for k, v in order.items() if k not in tail}
+    new.update(make_weiterlesen(ram, pid, a, ram.get('branding', {}).get('background-color', '#f0e8dd')))
+    ram['order'] = new
+
+
+# ---- new article pages
+
+def pt_inline(block):
+    defs = {d.get('_key'): d for d in block.get('markDefs') or []}
+    out = ''
+    for child in block.get('children') or []:
+        text = esc(child.get('text', '')).replace('\n', '<br>')
+        for mark in child.get('marks') or []:
+            if mark == 'strong':
+                text = f'<span class="font_iw7ycg382">{text}</span>'
+            elif mark == 'em':
+                text = f'<span class="font_jnkne5ro4">{text}</span>'
+            elif defs.get(mark, {}).get('_type') == 'link' and defs[mark].get('href'):
+                text = f'<a href="{html.escape(defs[mark]["href"])}" target="_blank" rel="noopener">{text}</a>'
+        out += text
+    return out
+
+
+def pt_groups(blocks):
+    """Split the body into text runs, quotes and images (each becomes its own section)."""
+    groups = []
+    for b in blocks or []:
+        if b.get('_type') == 'image':
+            groups.append(('image', b))
+        elif b.get('_type') == 'block' and b.get('style') == 'blockquote':
+            groups.append(('quote', b))
+        elif b.get('_type') == 'block':
+            if not groups or groups[-1][0] != 'text':
+                groups.append(('text', []))
+            groups[-1][1].append(b)
+    return groups
+
+
+def pt_text_html(blocks, p_template):
+    out, list_open = '', None
+    for b in blocks:
+        inner = pt_inline(b)
+        if b.get('listItem'):
+            tag = 'ol' if b['listItem'] == 'number' else 'ul'
+            if list_open != tag:
+                out += (f'</{list_open}>' if list_open else '') + f'<{tag}>'
+                list_open = tag
+            out += f'<li>{inner}</li>'
+            continue
+        if list_open:
+            out += f'</{list_open}>'
+            list_open = None
+        if not inner.strip():
+            continue
+        if b.get('style') == 'h2':
+            out += f'<h3 class="cms-zwischentitel">{inner}</h3>'
+        else:
+            out += retext(p_template, inner)
+    if list_open:
+        out += f'</{list_open}>'
+    return out
+
+
+def tag_links(names, kind, color):
+    if not names:
+        return ''
+    param = 'person' if kind == 'personen' else 'ort'
+    anchor = '#personenKarte' if kind == 'personen' else '#orte'
+    tags = ''.join(f'<a href="__HOME__?{param}={urllib.parse.quote(n)}{anchor}" class="tags tagsArtikel">{esc(n)}</a>' for n in names)
+    return f'<style>.tagsArtikel{{color:{color}}}</style><div class="ppt cms-tags">{tags}</div>'
+
+
+def make_cms_page(a):
+    T = TEMPLATES['article']
+    color = (a.get('farbe') or '#f0e8dd').lower()
+    if color not in PAGE_COLORS:
+        color = '#f0e8dd'
+    ram = {'order': {}, 'branding': {'background-color': color}, 'cover_visibility': 'visible'}
+    title = (a.get('titel') or '').strip()
+    author = (a.get('autor') or '').strip()
+    p_template = T['content_c36471af2']['content']['xl']
+
+    # cover: title box, introduction, "VON …"
+    cover = copy.deepcopy(T['cover'])
+    cover = recolor(cover, color)
+    image = cms_image(a.get('titelbild')) or cms_image(a.get('kachelbild'))
+    if image:
+        cover['styles']['xl'].update({'background-image': image, 'background_type': 'img', 'background-position': '50% 50%'})
+    else:
+        cover['styles']['xl'].pop('background-image', None)
+    ram['cover'] = cover
+    cover_rows, cover_ids = {}, {}
+    for rid, row in T['order']['cover'].items():
+        cols = {}
+        for cid, items in row['columns'].items():
+            ncid, _ = clone_item(T, cid, ram, color)
+            mods = []
+            for mid in items:
+                if mid == 'content_2854397ed' and not (a.get('untertitel') or '').strip():
+                    continue
+                nmid, m = clone_item(T, mid, ram, color)
+                if mid == 'content_27ef909dc':
+                    # the template splits "Karl & / Charlotte Bühler" into two h1 with a tiny line height;
+                    # a new title may wrap, so it gets a normal one
+                    m['content']['xl'] = ('<h1 style="text-align: center;" data-line-height-xl="3rem" '
+                                          'data-font-size-xs="1.667rem" data-line-height-xs="2rem">'
+                                          f'<span style="color: rgb(34, 34, 34);">{esc(title)}</span></h1>')
+                elif mid == 'content_2854397ed':
+                    m['content']['xl'] = retext(m['content']['xl'], esc_lines(a['untertitel'].strip()))
+                elif mid == 'content_2fa97ca74':
+                    m['content']['xl'] = retext(m['content']['xl'], esc(f'VON {author}'.upper()) if author else '')
+                mods.append(nmid)
+            cols[ncid] = mods
+        cover_rows[nid('row')] = {'columns': cols}
+    ram['order']['cover'] = cover_rows
+
+    groups = pt_groups(a.get('inhalt'))
+    first_text = groups.pop(0)[1] if groups and groups[0][0] == 'text' else []
+
+    # first section: author box (+ Personen/Orte tags) and the first text
+    sid, rows, ids = clone_section(T, 'section_97de7e8cd', ram, color)
+    inv = {v: k for k, v in ids.items()}
+    plural = bool(re.search(r'&| und |,', author))
+    for row in rows.values():
+        for cid, items in row['columns'].items():
+            keep = []
+            for mid in items:
+                m, old = ram[mid], inv.get(mid)
+                if old == 'content_ab8473653':
+                    m['content']['xl'] = retext(m['content']['xl'], 'DIE AUTOR:INNEN' if plural else 'DER AUTOR')
+                    if not (a.get('autorInfo') or '').strip():
+                        continue
+                elif old == 'content_b5c1ea9a1':
+                    if not (a.get('autorInfo') or '').strip():
+                        continue
+                    m['content']['xl'] = retext(m['content']['xl'], esc_lines(a['autorInfo'].strip()))
+                elif old in ('content_20ad6f714', 'content_227xcsf83'):
+                    if not a.get('personen'):
+                        continue
+                    m['classes'] = ''
+                    if old == 'content_227xcsf83':
+                        m['content']['xl'] = tag_links(a['personen'], 'personen', color)
+                elif old in ('content_5d0b93f2a', 'content_d64dywkxz'):
+                    if not a.get('orte'):
+                        continue
+                    m['classes'] = ''
+                    if old == 'content_d64dywkxz':
+                        m['content']['xl'] = tag_links(a['orte'], 'orte', color)
+                elif old == 'content_c36471af2':
+                    m['content']['xl'] = pt_text_html(first_text, p_template)
+                    m['classes'] = 'cms-text'
+                keep.append(mid)
+            items[:] = keep
+    ram['order'][sid] = rows
+
+    for kind, data in groups:
+        if kind == 'text':
+            sid, rows, ids = clone_section(T, 'section_50eb7b746', ram, color)
+            for row in rows.values():
+                for items in row['columns'].values():
+                    for mid in items:
+                        if ram[mid]['module'] == 'text':
+                            ram[mid]['content']['xl'] = pt_text_html(data, p_template)
+                            ram[mid]['classes'] = 'cms-text'
+        elif kind == 'quote':
+            sid, rows, ids = clone_section(T, 'section_e267e5d06', ram, color)
+            q = ids['content_e3627c159']
+            ram[q]['content']['xl'] = retext(ram[q]['content']['xl'], pt_inline(data))
+        else:
+            img = cms_image(data.get('asset'))
+            if not img:
+                continue
+            sid, rows, ids = clone_section(T, 'section_2c83990c2', ram, color)
+            ram[ids['content_6f2df25cb']]['content']['xl'] = img
+            ram[ids['content_6f2df25cb']].setdefault('options', {})['alt'] = (data.get('bildunterschrift') or '').strip()
+            cap = esc_lines((data.get('bildunterschrift') or '').strip())
+            if (data.get('quelle') or '').strip():
+                cap += ('<br><br>' if cap else '') + '<span class="cms-quelle">' + esc(data['quelle'].strip()) + '</span>'
+            ram[ids['content_7f91a065d']]['content']['xl'] = retext(ram[ids['content_7f91a065d']]['content']['xl'], cap)
+        ram['order'][sid] = rows
+
+    # bibliography: collapsible box in the sidebar column
+    entries = [pt_inline(b) for b in a.get('bibliographie') or [] if pt_inline(b).strip()]
+    if entries:
+        sid, rows, ids = clone_section(T, 'section_97de7e8cd', ram, color)
+        head, body = ids['content_ab8473653'], ids['content_b5c1ea9a1']
+        ram[head]['content']['xl'] = retext(ram[head]['content']['xl'], 'BIBLIOGRAPHIE')
+        ram[body]['content']['xl'] = '<ul class="citations">' + ''.join(f'<li>{e}</li>' for e in entries) + '</ul>'
+        for row in rows.values():
+            for cid, items in row['columns'].items():
+                items[:] = [m for m in items if m in (head, body)]
+        ram['order'][sid] = rows
+
+    pid = f"cms-{a['slug']}"
+    ram['order'].update(make_weiterlesen(ram, pid, a, color))
+    return {'id': pid, 'type': 'project', 'slug': a['slug'], 'title': title, 'date': '', 'modified': '',
+            'settings': {'meta': {'footer': PAGES['328']['settings'].get('meta', {}).get('footer', '353')}}, 'content': ram}
+
+
+def register_cms_pages():
+    """Add new Sanity articles as pages (before anything is rendered, so links resolve)."""
+    for a in load_cms_articles():
+        if a.get('seite') or not a.get('slug') or not a.get('inhalt'):
+            continue
+        pid = f"cms-{a['slug']}"
+        if a['slug'] in SLUGS:
+            print(f'  ! Sanity article "{a.get("titel")}": address "{a["slug"]}" already exists, skipped')
+            continue
+        PAGES[pid] = {'id': pid, 'type': 'project', 'slug': a['slug'], 'title': a.get('titel', ''), 'settings': {}, 'content': {'order': {}}}
+        SLUGS[a['slug']] = pid
+        CMS_PAGES[pid] = a
+    for pid, a in CMS_PAGES.items():
+        PAGES[pid] = make_cms_page(a)
+    if CMS_PAGES:
+        print(f'  articles: {len(CMS_PAGES)} new from Sanity')
+
+
+# =====================================================================
 # main
 # =====================================================================
 
@@ -1232,7 +1817,8 @@ def build_assets():
 def write_studio_page_list():
     """The Studio's "Seite auf der Website" dropdown lists the article pages that exist here."""
     items = sorted(({'title': page_title(p).replace(' – ' + SITE['tagline'], ''), 'value': p['slug']}
-                    for p in PAGES.values() if p['type'] == 'project' and p['slug'] not in ('impressum', 'datenschutz')),
+                    for pid, p in PAGES.items() if p['type'] == 'project' and p['slug'] not in ('impressum', 'datenschutz')
+                    and not str(pid).startswith('cms-')),
                    key=lambda x: x['value'])
     ts = ('// Article pages that exist on the website (generated from source/content.json by tools/build.py).\n'
           '// An "Artikel" entry in the Studio links to one of these pages.\n'
@@ -1249,6 +1835,8 @@ def main():
         html_file.unlink()
     OUT.mkdir(exist_ok=True)
     write_studio_page_list()
+    snapshot_templates()
+    register_cms_pages()
     build_assets()
     built = []
     for pid in PAGES:
