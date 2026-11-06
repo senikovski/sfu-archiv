@@ -542,6 +542,16 @@ def prepare_captions(ram):
                             m.setdefault('options', {})['align'] = 'left' if side == 'left' else 'right'
 
 
+def fix_glow_layers(ram):
+    """The orange/blue glows (#gradientSmoke, #gradientWrap …) sit in code modules that carry
+    their own z-index, which lifts the glow above the section's content – Safari then
+    shows a hazy layer over text and images. Without it the glow stays behind everything."""
+    for m in ram.values():
+        if isinstance(m, dict) and m.get('module') == 'code' and re.search(r'id="(gradientSmoke|gradientWrap|orteGradientW)"', str(m.get('content', {}).get('xl', ''))):
+            for st in m.get('styles', {}).values():
+                st.pop('z-index', None)
+
+
 def collapsible_pairs(ram, items):
     """Bibliographie boxes: a header text module ("BIBLIOGRAPHIE", class autorBox)
     followed by the list (class bodenBox). site.js turns the header into a toggle."""
@@ -1152,6 +1162,7 @@ def render_page(pid):
     elif p['type'] == 'project':
         apply_weiterlesen(pid, ram)
     page.motion_css_enabled = ram.get('branding', {}).get('scroll_reveal') == 'disabled'
+    fix_glow_layers(ram)
     prepare_captions(ram)
     if p['type'] == 'project' and ram.get('branding', {}).get('background-color'):
         page.article_end = tint_further_reading(ram, ram['branding']['background-color'])

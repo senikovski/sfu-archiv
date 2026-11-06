@@ -104,3 +104,5 @@
 #content-holder .cms-text ul,#content-holder .cms-text ol{margin:0 0 1.33333em 1.2em;font-family:"Lexik-Regular-webfont",serif;font-size:1.11111rem;line-height:1.33333}
 #content-holder .cms-tags{display:flex;flex-wrap:wrap;gap:6px 0;padding:6px 0 14px 10px}
 #content-holder .cms-quelle{opacity:.75}
+/* decorative glows never block clicks */
+#gradientSmoke,#gradientSmoke *,#gradientWrap,#gradientWrap *,#orteGradientW,#orteGradientW *{pointer-events:none}
